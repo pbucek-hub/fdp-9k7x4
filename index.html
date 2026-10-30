@@ -1870,12 +1870,13 @@
     const accommodationFloor = ruleSet==='NCC'?8:10;
     const floor = accommodationFloor + transport;
     const ok = proposed >= floor;
+    const catReview = ruleSet==='CAT' && ok;
     const box = document.getElementById('pic-discretion-result');
     box.innerHTML =
       '<div class="result" style="margin-top:0;">'+
       '<div class="row"><span class="k">Floor ('+accommodationFloor+'h accommodation + transport time)</span><span class="v">'+hhmm(floor)+'</span></div>'+
       '<div class="row"><span class="k">Proposed rest</span><span class="v">'+hhmm(proposed)+'</span></div>'+
-      '<div class="row"><span class="k">Status</span><span class="v"><span class="status '+(ok?'ok':'bad')+'">'+(ok?(ruleSet==='NCC'?'Permitted if risk-assessed & documented':'Meets accommodation floor — CAT reduced-rest restrictions still apply'):'Below the absolute floor — not permitted')+'</span></span></div>'+
+      '<div class="row"><span class="k">Status</span><span class="v"><span class="status '+(ok?'ok':'bad')+'">'+(ok?(ruleSet==='NCC'?'Permitted if risk-assessed & documented':'REVIEW ONLY — §7.20 exceptional PIC discretion; crew fatigue assessment, mitigations and Centrik report required before next flight'):'Below the absolute floor — not permitted')+'</span></span></div>'+
       '</div>';
   }
 

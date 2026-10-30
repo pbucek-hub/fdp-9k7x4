@@ -700,6 +700,7 @@
     <button data-tab="reference">Reference</button>
   </nav>
 
+<div id="catProvisionalNotice" role="alert" style="display:none;margin:12px 0;padding:12px;border:1px solid #b7791f;border-radius:10px;background:#302414;color:#ffe2a4;font-size:13px;line-height:1.5"><strong>CAT — PROVISIONAL / NOT APPROVED FOR OPERATIONAL USE</strong><div>JCC OM-A Section 7 I3R06 (30 Oct 2026) is expressly marked DO NOT USE. Refer to NTC 2026-110 for current approved Chapter 7. Calculations are reference-only until reconciled with that notice.</div></div>
   <!-- ===================== TAB 1: MAX FDP ===================== -->
   <section class="panel active" id="panel-fdp">
     <h2 class="section-title">Maximum Flying Duty Period</h2>
@@ -1229,6 +1230,7 @@
   let ruleSet = 'NCC';
   seg('seg-ruleset', v=>{
     ruleSet=v;
+    document.getElementById('catProvisionalNotice').style.display=v==='CAT'?'block':'none';
     document.getElementById('ruleset-sub').innerHTML = v==='NCC'
       ? 'NCC — <strong>2026_JCC_PART_NCC_OMA_I2R19</strong> (Issue 2, Rev 19 — 29 June 2026).'
       : 'CAT/AOC — <strong>OMA CAT</strong>, Issue 2, Revision 15, 29 June 2026, Chapter 7.';

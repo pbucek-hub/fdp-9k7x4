@@ -700,6 +700,7 @@
     <button data-tab="reference">Reference</button>
   </nav>
 
+<div id="catProvisionalNotice" role="alert" style="display:none;margin:12px 0;padding:12px;border:1px solid #b7791f;border-radius:10px;background:#302414;color:#ffe2a4;font-size:13px;line-height:1.5"><strong>CAT — PROVISIONAL / NOT APPROVED FOR OPERATIONAL USE</strong><div>JCC OM-A Section 7 I3R06 (30 Oct 2026) is expressly marked DO NOT USE. Refer to NTC 2026-110 for current approved Chapter 7. Calculations are reference-only until reconciled with that notice.</div></div>
   <!-- ===================== TAB 1: MAX FDP ===================== -->
   <section class="panel active" id="panel-fdp">
     <h2 class="section-title">Maximum Flying Duty Period</h2>
@@ -1229,10 +1230,11 @@
   let ruleSet = 'NCC';
   seg('seg-ruleset', v=>{
     ruleSet=v;
+    document.getElementById('catProvisionalNotice').style.display=v==='CAT'?'block':'none';
     document.getElementById('ruleset-sub').innerHTML = v==='NCC'
       ? 'NCC — <strong>2026_JCC_PART_NCC_OMA_I2R19</strong> (Issue 2, Rev 19 — 29 June 2026).'
-      : 'CAT/AOC — <strong>OMA CAT</strong>, Issue 2, Revision 15, 29 June 2026, Chapter 7.';
-    document.getElementById('ruleset-hint').textContent = v==='NCC' ? 'Part-NCC OMA Section 7.5' : 'OMA CAT, Issue 2, Revision 15, 29 June 2026, Chapter 7';
+      : 'CAT/AOC — <strong>PROVISIONAL JCC OM-A I3R06 (30 Oct 2026)</strong> — DO NOT USE; current approved Chapter 7 requires NTC 2026-110.';
+    document.getElementById('ruleset-hint').textContent = v==='NCC' ? 'Part-NCC OMA Section 7.5' : 'PROVISIONAL CAT I3R06 — NOT APPROVED; see NTC 2026-110';
     document.getElementById('longrange-summary').textContent = v==='NCC' ? 'Long-sector adjustment — OMA 7.5.9' : 'Long-sector adjustment — OMA 7.15';
     document.getElementById('cat-ops-helper').style.display = v==='CAT' ? '' : 'none';
     document.getElementById('tab-longrange').style.display = v==='NCC' ? '' : 'none';
@@ -1819,11 +1821,12 @@
     const catPrior = ruleSet==='CAT' ? document.getElementById('catPriorActivity').value : 'duty';
 
     if(ruleSet==='CAT' && catPrior!=='duty'){
-      const special = catPrior==='standbyNoCall' ? 12 : 10;
+      const special = catPrior==='standbyNoCall' ? 12 : null;
       const label = catPrior==='standbyNoCall'
         ? 'Standby ended without callout — minimum 12h rest before next duty.'
         : 'Contactable period ended — minimum 10h before next duty.';
       const box=document.getElementById('rest-result');
+      if(special===null){box.innerHTML='<div class="headline"><div class="num">REVIEW</div><div class="lbl">Contactable availability is not automatically a 10h rest rule under provisional CAT 7.18. Confirm actual duties and uninterrupted rest.</div></div>';return;}
       box.innerHTML=
         '<div class="headline"><div class="num">'+hhmm(special)+'</div><div class="lbl">MINIMUM REST / ELAPSED TIME REQUIRED</div></div>'+
         '<div class="row"><span class="k">'+label+'</span><span class="v">'+hhmm(special)+'</span></div>';
@@ -1867,15 +1870,18 @@
     const accommodationFloor = ruleSet==='NCC'?8:10;
     const floor = accommodationFloor + transport;
     const ok = proposed >= floor;
+    const catReview = ruleSet==='CAT' && ok;
     const box = document.getElementById('pic-discretion-result');
     box.innerHTML =
       '<div class="result" style="margin-top:0;">'+
       '<div class="row"><span class="k">Floor ('+accommodationFloor+'h accommodation + transport time)</span><span class="v">'+hhmm(floor)+'</span></div>'+
       '<div class="row"><span class="k">Proposed rest</span><span class="v">'+hhmm(proposed)+'</span></div>'+
-      '<div class="row"><span class="k">Status</span><span class="v"><span class="status '+(ok?'ok':'bad')+'">'+(ok?(ruleSet==='NCC'?'Permitted if risk-assessed & documented':'Meets accommodation floor — CAT reduced-rest restrictions still apply'):'Below the absolute floor — not permitted')+'</span></span></div>'+
+      '<div class="row"><span class="k">Status</span><span class="v"><span class="status '+(ok?'ok':'bad')+'">'+(ok?(ruleSet==='NCC'?'Permitted if risk-assessed & documented':'REVIEW ONLY — §7.20 exceptional PIC discretion; crew fatigue assessment, mitigations and Centrik report required before next flight'):'Below the absolute floor — not permitted')+'</span></span></div>'+
       '</div>';
   }
 
+  // CAT I3R06 §7.24: half-credit positioning/standby requires a detailed duty ledger.
+  // Do not silently apply these credits to manually entered cumulative totals.
   // ================= CUMULATIVE TAB =================
   const LIMITS_NCC = {d7:65, d14:105, d28:190, d365:2000, f28:100, f365:900};
   const LIMITS_CAT = {d7:55, d14:95, d28:190, d365:2000, f28:100, f365:900};
@@ -1916,7 +1922,7 @@
     rows += line('Flight time · '+L.f28+'h / 28 days', vals.f28, L.f28, 'h');
     rows += line('Flight time · '+L.f365+'h / 12 months', vals.f365, L.f365, 'h');
 
-    const consecSt = consecDuty>=7 ? 'bad' : (consecDuty>=6?'warn':'ok');
+    const consecSt = consecDuty>7 ? 'bad' : (consecDuty>=7?'warn':'ok');
     rows += '<div class="row"><span class="k">Consecutive duty days (max 7, may position on day 8)</span><span class="v"><span class="status '+consecSt+'">'+consecDuty+' day(s)'+(consecDuty>=7?' — day off due':'')+'</span></span></div>';
 
     const off28St = daysOff28>=7 ? 'ok' : 'bad';
@@ -1932,6 +1938,7 @@
       rows += '<div class="row"><span class="k">Calendar-year days free of duty (min 96)</span><span class="v"><span class="status '+yst+'">'+daysOffYear+'</span></span></div>';
     }
 
+    if(ruleSet==='CAT') rows += '<div class="note warn">CAT provisional §7.24: enter already-accounted cumulative hours. Positioning and qualifying standby may have half-credit rules; this form cannot verify those without individual duty records.</div>';
     document.getElementById('cumulative-result').innerHTML = rows;
     compactResultDetails(document.getElementById('cumulative-result'));
   }
@@ -1947,8 +1954,8 @@
     const count = parseInt(document.getElementById('lrCount').value||'0',10);
     const hours = parseFloat(document.getElementById('lrHours').value||'0');
 
-    const countSt = count>=4 ? 'bad' : (count===3?'warn':'ok');
-    const hoursSt = hours>=170 ? 'bad' : (hours>=153?'warn':'ok');
+    const countSt = count>4 ? 'bad' : (count===4?'warn':'ok');
+    const hoursSt = hours>170 ? 'bad' : (hours>=170?'warn':'ok');
 
     document.getElementById('longrange-result').innerHTML =
       '<div class="row"><span class="k">Conditions met</span><span class="v"><span class="status '+(allChecked?'ok':'bad')+'">'+(allChecked?'All 4 confirmed':'Incomplete')+'</span></span></div>'+
